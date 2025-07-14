@@ -1,0 +1,62 @@
+### Medical Management System API Tests
+
+@baseUrl = http://localhost:8080
+
+### Test Root Endpoint
+GET {{baseUrl}}
+
+### Get All Patients
+GET {{baseUrl}}/patients
+
+### Create a Patient
+POST {{baseUrl}}/patients
+Content-Type: application/json
+
+{
+  "name": "Alice Johnson",
+  "dateOfBirth": "1992-03-10"
+}
+
+### Get All Medications
+GET {{baseUrl}}/medications
+
+### Create a Medication
+POST {{baseUrl}}/medications
+Content-Type: application/json
+
+{
+  "name": "Paracetamol",
+  "dosage": "500mg",
+  "frequency": "4 times daily"
+}
+
+### Get All Assignments
+GET {{baseUrl}}/assignments
+
+### Create an Assignment
+POST {{baseUrl}}/assignments
+Content-Type: application/json
+
+{
+  "patientId": 1,
+  "medicationId": 1,
+  "startDate": "2025-07-14",
+  "days": 5
+}
+
+### Get Assignments with Remaining Days
+GET {{baseUrl}}/assignments/remaining-days
+
+### Get Specific Patient
+GET {{baseUrl}}/patients/1
+
+### Update a Patient
+PATCH {{baseUrl}}/patients/1
+Content-Type: application/json
+
+{
+  "name": "John Doe Updated"
+}
+
+### Delete an Assignment
+DELETE {{baseUrl}}/assignments/1 

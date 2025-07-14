@@ -1,0 +1,228 @@
+# Medical Management System - Cursor Rules
+
+## Project Overview
+This is a **Medical Management System** built with NestJS backend and Next.js frontend for tracking patient medications and treatment schedules.
+
+### Core Functionality
+- Patient management (CRUD operations)
+- Medication management (CRUD operations) 
+- Assignment management (assign medications to patients)
+- Treatment tracking (calculate remaining days of treatment)
+
+## Technology Stack
+
+### Backend (NestJS - Port 8080)
+- **Framework**: NestJS v11
+- **Database**: SQLite with TypeORM
+- **Validation**: Custom DTOs (class-validator removed due to typing issues)
+- **Architecture**: Modular design with separate modules for each entity
+
+### Frontend (Next.js - Port 3000)
+- **Framework**: Next.js with TypeScript
+- **Styling**: Tailwind CSS
+- **UI Components**: Custom components
+- **Data Fetching**: Built-in fetch API
+
+## Database Schema
+
+### Entities & Relationships
+```
+Patient (1) ↔ (N) Assignment (N) ↔ (1) Medication
+
+Patient:
+- id: number (PK, auto-generated)
+- name: string
+- dateOfBirth: Date
+- assignments: Relation<Assignment[]>
+
+Medication:
+- id: number (PK, auto-generated)
+- name: string
+- dosage: string (e.g., "500mg")
+- frequency: string (e.g., "twice daily")
+- assignments: Relation<Assignment[]>
+
+Assignment:
+- id: number (PK, auto-generated)
+- patientId: number (FK to Patient)
+- medicationId: number (FK to Medication)
+- startDate: Date
+- days: number (treatment duration)
+- patient: Patient relation
+- medication: Medication relation
+```
+
+## Project Structure
+
+```
+interview-challenge/
+├── backend/                 # NestJS API Server
+│   ├── src/
+│   │   ├── main.ts         # App entry point (port 8080)
+│   │   ├── app.module.ts   # Root module
+│   │   ├── patient/        # Patient module
+│   │   │   ├── patient.entity.ts
+│   │   │   ├── patient.service.ts
+│   │   │   ├── patient.controller.ts
+│   │   │   ├── patient.module.ts
+│   │   │   └── dto/
+│   │   ├── medication/     # Medication module
+│   │   │   ├── medication.entity.ts
+│   │   │   ├── medication.service.ts
+│   │   │   ├── medication.controller.ts
+│   │   │   ├── medication.module.ts
+│   │   │   └── dto/
+│   │   └── assignment/     # Assignment module
+│   │       ├── assignment.entity.ts
+│   │       ├── assignment.service.ts
+│   │       ├── assignment.controller.ts
+│   │       ├── assignment.module.ts
+│   │       ├── assignment.service.spec.ts
+│   │       └── dto/
+│   ├── database.sqlite     # SQLite database file
+│   └── package.json
+└── frontend/               # Next.js Frontend
+    ├── app/
+    │   ├── layout.tsx
+    │   └── page.tsx
+    └── package.json
+```
+
+## API Endpoints
+
+### Patient Endpoints (/patients)
+- `GET /patients` - List all patients with assignments
+- `GET /patients/:id` - Get specific patient
+- `POST /patients` - Create patient
+- `PATCH /patients/:id` - Update patient
+- `DELETE /patients/:id` - Delete patient
+
+### Medication Endpoints (/medications)
+- `GET /medications` - List all medications
+- `GET /medications/:id` - Get specific medication
+- `POST /medications` - Create medication
+- `PATCH /medications/:id` - Update medication
+- `DELETE /medications/:id` - Delete medication
+
+### Assignment Endpoints (/assignments)
+- `GET /assignments` - List all assignments
+- `GET /assignments/:id` - Get specific assignment
+- `POST /assignments` - Create assignment
+- `PATCH /assignments/:id` - Update assignment
+- `DELETE /assignments/:id` - Delete assignment
+- `GET /assignments/remaining-days` - All assignments with calculated remaining days
+- `GET /assignments/:id/remaining-days` - Specific assignment with remaining days
+
+## Key Business Logic
+
+### Remaining Days Calculation
+```typescript
+calculateRemainingDays(startDate: Date, totalDays: number): number {
+  const today = new Date();
+  const start = new Date(startDate);
+  
+  // Reset time to avoid timezone issues
+  today.setHours(0, 0, 0, 0);
+  start.setHours(0, 0, 0, 0);
+  
+  const elapsedDays = Math.floor((today.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+  const remainingDays = totalDays - elapsedDays;
+  
+  return Math.max(0, remainingDays);
+}
+```
+
+## Development Guidelines
+
+### Code Style
+- **Language**: TypeScript throughout
+- **Formatting**: Prettier with automatic formatting
+- **Linting**: ESLint with TypeScript rules
+- **Naming**: camelCase for variables/functions, PascalCase for classes/interfaces
+
+### Entity Design Patterns
+- Use string references for TypeORM relationships to avoid circular imports
+- Use `Relation<Type>` for proper typing in entities
+- Separate DTOs for create/update operations
+- No validation decorators (removed due to typing conflicts)
+
+### Service Layer Patterns
+- Type guards for update operations: `typeof dto.field === 'type'`
+- Explicit error handling with NotFoundException
+- Repository pattern with TypeORM
+- Relations loaded in find operations when needed
+
+### Controller Patterns
+- Proper HTTP status codes (201 for create, 204 for delete)
+- PATCH for partial updates
+- RESTful route naming
+- Proper parameter extraction with decorators
+
+## Common Commands
+
+### Backend
+```bash
+cd backend
+npm install                 # Install dependencies
+npm run start:dev          # Development server (auto-reload)
+npm run build              # Build for production
+npm run start:prod         # Production server
+npm run format             # Format code with Prettier
+npm run lint               # Run ESLint
+npm test                   # Run unit tests
+```
+
+### Frontend
+```bash
+cd frontend
+npm install                # Install dependencies
+npm run dev               # Development server
+npm run build             # Build for production
+npm start                 # Production server
+```
+
+## Database Configuration
+- **Type**: SQLite
+- **File**: `backend/database.sqlite`
+- **Auto-sync**: Enabled (synchronize: true)
+- **Entity Discovery**: Automatic via glob pattern
+
+## CORS Configuration
+- **Enabled**: Yes
+- **Origin**: http://localhost:3000
+- **Methods**: GET, POST, PUT, DELETE, PATCH
+- **Credentials**: Enabled
+
+## Testing Strategy
+- Unit tests for calculation logic (assignment.service.spec.ts)
+- Manual API testing with tools like Postman/Thunder Client
+- E2E testing via HTTP requests
+- Frontend integration testing
+
+## Known Issues & Solutions
+- **TypeScript strict mode**: Disabled to resolve class-validator typing conflicts
+- **Circular imports**: Avoided by using string references in entities
+- **ESLint warnings**: Mostly resolved, remaining are non-blocking
+- **Line endings**: Windows CRLF vs Unix LF handled by Prettier
+
+## Security Considerations
+- Input validation through TypeScript typing
+- SQL injection protection via TypeORM parameterized queries
+- CORS properly configured for development
+- No authentication implemented (future enhancement)
+
+## Future Enhancements
+- Add authentication and authorization
+- Implement data validation with custom validators
+- Add comprehensive error handling
+- Implement pagination for large datasets
+- Add audit logging
+- Database migrations for production
+- API documentation with Swagger/OpenAPI
+
+## Development Notes
+- Database file is auto-created on first run
+- Hot reload enabled in development
+- TypeScript compilation verified before runtime
+- All modules properly exported and imported
+- Clean separation of concerns maintained 
