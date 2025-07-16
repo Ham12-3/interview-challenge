@@ -14,6 +14,10 @@ import { AppService } from './app.service';
       database: 'database.sqlite',
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: true,
+      logging: false,
+      extra: {
+        enableForeignKeys: true,
+      },
     }),
     ThrottlerModule.forRoot([
       {

@@ -18,6 +18,9 @@ export class Patient {
   @Column({ type: 'date' })
   dateOfBirth: Date;
 
-  @OneToMany(() => Assignment, (assignment) => assignment.patient)
+  @OneToMany(() => Assignment, (assignment) => assignment.patient, {
+    cascade: true,
+    onDelete: 'CASCADE',
+  })
   assignments: Relation<Assignment[]>;
 }

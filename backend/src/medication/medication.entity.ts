@@ -21,6 +21,9 @@ export class Medication {
   @Column()
   frequency: string;
 
-  @OneToMany(() => Assignment, (assignment) => assignment.medication)
+  @OneToMany(() => Assignment, (assignment) => assignment.medication, {
+    cascade: true,
+    onDelete: 'CASCADE',
+  })
   assignments: Relation<Assignment[]>;
 }

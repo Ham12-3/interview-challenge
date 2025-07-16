@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { assignmentApi, patientApi } from '../lib/api';
 import type { AssignmentWithRemainingDays } from '../types';
@@ -81,6 +81,148 @@ const MoreVerticalIcon = () => (
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
   </svg>
 );
+
+const EditIcon = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+  </svg>
+);
+
+const TrashIcon = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+  </svg>
+);
+
+const EyeIcon = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+  </svg>
+);
+
+const DownloadIcon = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+  </svg>
+);
+
+
+
+// Dropdown Menu Component
+const PatientDropdownMenu = ({ 
+  patientId, 
+  patientName, 
+  isOpen, 
+  onToggle, 
+  onClose, 
+  onDelete 
+}: {
+  patientId: number;
+  patientName: string;
+  isOpen: boolean;
+  onToggle: () => void;
+  onClose: () => void;
+  onDelete: (id: number, name: string) => void;
+}) => {
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen, onClose]);
+
+  const handleExportData = () => {
+    // Create CSV data for patient
+    const csvContent = `Patient Name,${patientName}\nPatient ID,${patientId}\nExport Date,${new Date().toLocaleDateString()}`;
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${patientName.replace(/\s+/g, '_')}_data.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+    onClose();
+  };
+
+  return (
+    <div className="relative" ref={menuRef}>
+      <Button 
+        variant="ghost" 
+        size="sm" 
+        className="h-8 w-8 p-0 hover:bg-gray-100"
+        onClick={onToggle}
+      >
+        <MoreVerticalIcon />
+      </Button>
+      
+      {isOpen && (
+        <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50 py-1">
+          <Link href={`/patients/${patientId}/edit`}>
+            <button 
+              className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-blue-50 flex items-center gap-2"
+              onClick={onClose}
+            >
+              <EditIcon />
+              Edit Patient
+            </button>
+          </Link>
+          
+          <Link href={`/patients/${patientId}`}>
+            <button 
+              className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-blue-50 flex items-center gap-2"
+              onClick={onClose}
+            >
+              <EyeIcon />
+              View Details
+            </button>
+          </Link>
+          
+          <Link href={`/assignments/new?patientId=${patientId}`}>
+            <button 
+              className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-blue-50 flex items-center gap-2"
+              onClick={onClose}
+            >
+              <PillIcon />
+              Manage Treatments
+            </button>
+          </Link>
+          
+          <button 
+            className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-blue-50 flex items-center gap-2"
+            onClick={handleExportData}
+          >
+            <DownloadIcon />
+            Export Data
+          </button>
+          
+          <div className="border-t border-gray-100 my-1"></div>
+          
+          <button 
+            className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+            onClick={() => onDelete(patientId, patientName)}
+          >
+            <TrashIcon />
+            Delete Patient
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
 
 // Progress Ring Component
 const ProgressRing = ({ progress, size = 48, strokeWidth = 4, color = "#3B82F6" }: {
@@ -193,6 +335,7 @@ export default function Home() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'urgent' | 'stable'>('all');
   const [expandedCards, setExpandedCards] = useState<Set<number>>(new Set());
+  const [openDropdown, setOpenDropdown] = useState<number | null>(null);
 
   const fetchData = async () => {
     setLoading(true);
@@ -287,6 +430,31 @@ export default function Home() {
       newExpanded.add(patientId);
     }
     setExpandedCards(newExpanded);
+  };
+
+  const toggleDropdown = (patientId: number) => {
+    setOpenDropdown(openDropdown === patientId ? null : patientId);
+  };
+
+  const closeDropdown = () => {
+    setOpenDropdown(null);
+  };
+
+  const handleDeletePatient = async (id: number, name: string) => {
+    if (confirm(`Are you sure you want to delete patient "${name}"? This will also delete all associated treatments. This action cannot be undone.`)) {
+      try {
+        await patientApi.delete(id);
+        fetchData(); // Refresh data
+        closeDropdown();
+      } catch (error) {
+        console.error('Delete error:', error);
+        if (error instanceof Error && error.message.includes('FOREIGN KEY constraint failed')) {
+          alert('Cannot delete patient because they have active treatments. Please remove all treatments first.');
+        } else {
+          alert('Failed to delete patient. Please try again.');
+        }
+      }
+    }
   };
 
   const totalPatients = Object.values(grouped).length;
@@ -534,11 +702,16 @@ export default function Home() {
                             </div>
                           </div>
                           
-                          <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                              <MoreVerticalIcon />
-                            </Button>
-                          </div>
+                                                      <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                              <PatientDropdownMenu 
+                                patientId={group.patient.id} 
+                                patientName={group.patient.name} 
+                                isOpen={openDropdown === group.patient.id}
+                                onToggle={() => toggleDropdown(group.patient.id)}
+                                onClose={closeDropdown}
+                                onDelete={handleDeletePatient}
+                              />
+                            </div>
                         </div>
                       </CardHeader>
 

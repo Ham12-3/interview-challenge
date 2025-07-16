@@ -55,6 +55,18 @@ export class PatientService {
 
   async remove(id: number): Promise<void> {
     const patient = await this.findOne(id);
+
+    // First remove all assignments for this patient
+    if (patient.assignments && patient.assignments.length > 0) {
+      await this.patientRepository
+        .createQueryBuilder()
+        .delete()
+        .from('assignment')
+        .where('patientId = :patientId', { patientId: id })
+        .execute();
+    }
+
+    // Then remove the patient
     await this.patientRepository.remove(patient);
   }
 }
