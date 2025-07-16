@@ -5,7 +5,7 @@ import {
   OneToMany,
   Relation,
 } from 'typeorm';
-import type { Assignment } from '../assignment/assignment.entity';
+import { Assignment } from '../assignment/assignment.entity';
 
 @Entity()
 export class Patient {
@@ -18,6 +18,6 @@ export class Patient {
   @Column({ type: 'date' })
   dateOfBirth: Date;
 
-  @OneToMany('Assignment', 'patient')
+  @OneToMany(() => Assignment, (assignment) => assignment.patient)
   assignments: Relation<Assignment[]>;
 }

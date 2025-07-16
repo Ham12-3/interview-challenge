@@ -5,7 +5,7 @@ import {
   OneToMany,
   Relation,
 } from 'typeorm';
-import type { Assignment } from '../assignment/assignment.entity';
+import { Assignment } from '../assignment/assignment.entity';
 
 @Entity()
 export class Medication {
@@ -21,6 +21,6 @@ export class Medication {
   @Column()
   frequency: string;
 
-  @OneToMany('Assignment', 'medication')
+  @OneToMany(() => Assignment, (assignment) => assignment.medication)
   assignments: Relation<Assignment[]>;
 }

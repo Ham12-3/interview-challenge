@@ -4,23 +4,26 @@ import {
   Column,
   ManyToOne,
   JoinColumn,
+  Relation,
 } from 'typeorm';
+import { Patient } from '../patient/patient.entity';
+import { Medication } from '../medication/medication.entity';
 
 @Entity()
 export class Assignment {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne('Patient', 'assignments')
+  @ManyToOne(() => Patient, (patient) => patient.assignments)
   @JoinColumn({ name: 'patientId' })
-  patient: any;
+  patient: Relation<Patient>;
 
   @Column()
   patientId: number;
 
-  @ManyToOne('Medication', 'assignments')
+  @ManyToOne(() => Medication, (medication) => medication.assignments)
   @JoinColumn({ name: 'medicationId' })
-  medication: any;
+  medication: Relation<Medication>;
 
   @Column()
   medicationId: number;
